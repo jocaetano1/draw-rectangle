@@ -1,22 +1,23 @@
 <script lang="ts" setup>
-
     const props = defineProps({ imageUrl: String });
     type Rectangle = {
+        id: string,
         x: number,
         y: number,
         width: number,
         height: number
     }
     let isDrawing = false;
+    let isMouseDown = false;
+    let isMouseMove = false;
     let rectangles: Rectangle[] = []
 
     onMounted(() => {
         const containerElement = document.getElementById("container");
-        const imageElement = document.getElementById("image");
-        let startX: any, startY: any, endX: any, endY: any;
-        
         function startRectangle(event: MouseEvent) {
+            const idRectangle = Math.trunc(Math.random() * 1000);
             const rectange: Rectangle = {
+                id: idRectangle.toString(),
                 x: event.clientX,
                 y: event.clientY,
                 width: 0,
@@ -24,60 +25,75 @@
             }
             isDrawing = true;
             rectangles.push(rectange)
-            console.log(rectangles)
         }
 
-        function drawRectangle (event: MouseEvent){
+        function sizeRectangle(event: MouseEvent){
             if (!isDrawing) return;
-            event.preventDefault()
             let endX = event.clientX;
             let endY = event.clientY;
-
-            const currentRectangle = rectangles[rectangles.length - 1]
-            let width = Math.abs(endX - currentRectangle.x);
-            let height = Math.abs(endY - currentRectangle.y);
-            let areaElement = document.createElement("div")
-            areaElement.setAttribute("class", "rectangle")
-            areaElement.style.position = "absolute";
-            areaElement.style.left = Math.min(currentRectangle.x, endX) + "px";
-            areaElement.style.top = Math.min(currentRectangle.y, endY) + "px";"px";
-            areaElement.style.width =  width + "px"      
-            areaElement.style.height = height + "px"
-
-            if (!containerElement?.hasChildNodes()){
-                containerElement?.appendChild(areaElement)
-                console.log()
-            }
-            containerElement?.replaceChild(areaElement, areaElement)
-            console.log(event)
             
+            const rectangle = rectangles[rectangles.length - 1]
+            rectangle.width = Math.abs(endX - rectangle.x);
+            rectangle.height = Math.abs(endY - rectangle.y);
+
+            let x = Math.min(rectangle.x, endX)
+            let y = Math.min(rectangle.y, endY)
+            let rectangleElement = drawElement(x, y, rectangle)
+
+            if (document.getElementById(rectangle.id)){
+                let element = document.getElementById(rectangle.id)
+                containerElement!.replaceChild(rectangleElement, element as HTMLElement)
+            } else {
+                containerElement!.appendChild(rectangleElement)
+            }
+
         }
         
-        function endRectangle(event: MouseEvent){
+        function stopRectangle(event: MouseEvent){
             isDrawing = false;
-            const currentRectangle = rectangles[rectangles.length - 1]
-            let width = Math.abs(endX - currentRectangle.x);
-            let height = Math.abs(endY - currentRectangle.y);
-            let areaElement = document.createElement("div")
-            areaElement.setAttribute("class", "rectangle")
-            areaElement.style.position = "absolute";
-            areaElement.style.left = Math.min(currentRectangle.x, endX) + "px";
-            areaElement.style.top = Math.min(currentRectangle.y, endY) + "px";"px";
-            areaElement.style.width =  width + "px"      
-            areaElement.style.height = height + "px"
-            containerElement?.appendChild(areaElement)
+            const rectangle = rectangles[rectangles.length - 1]
+            let x = Math.min(rectangle.x, event.clientX)
+            let y = Math.min(rectangle.y, event.clientY)
+            attachIcon(x + rectangle.width, y - 13, rectangle.id)
         }
 
-        containerElement!.addEventListener("mousedown", startRectangle)
-        containerElement!.addEventListener("mousemove", drawRectangle)
-        containerElement!.addEventListener("mouseup", endRectangle)
+        function drawElement(positionX: number, positionY: number, rectangle: Rectangle){
+            let divElement = document.createElement("div")
+            divElement.setAttribute("class", "rectangle")
+            divElement.setAttribute("id", rectangle.id)
+            divElement.style.position = "absolute";
+            divElement.style.left = positionX + "px";
+            divElement.style.top = positionY + "px";
+            divElement.style.width =  rectangle.width + "px"      
+            divElement.style.height = rectangle.height + "px"
+            return divElement
+        }
 
+        function attachIcon(positionX: number, positionY: number, rectangleId: string) {
+            const icon = document.createElement("button")
+            icon.setAttribute("class", "icon")
+            icon.setAttribute("data-rectangle", rectangleId)
+            icon.innerText = "x"
+            icon.style.left = positionX + "px"; 
+            icon.style.top = positionY + "px"; 
+            containerElement?.appendChild(icon);
+        }
+
+        function deleteRectangle(event: Event){
+            console.log(event, "click")
+        }
+
+
+
+        containerElement!.addEventListener("mousedown", startRectangle)
+        containerElement!.addEventListener("mousemove", sizeRectangle)
+        containerElement!.addEventListener("mouseup", stopRectangle)
     })
 </script>
 
 <template>
-    <div id="container" class="w-[800px] y-[600px] border border-2 border-green-200 relative">
-        <img id="image" :src="props.imageUrl" draggable="false">
+    <div id="container" class="w-[800px] h-auto border border-2 border-green-200 relative">
+        <img class="mx-auto" id="image" :src="props.imageUrl" draggable="false">
     </div>
 </template>
 
@@ -87,7 +103,16 @@
         width: 0;
         height: 0;
         border: 1px solid red;
-        background-color: red;
         pointer-events: none;
+    }
+    .icon {
+        border: 1px solid gray;
+        width: 20px;
+        height: 20px;
+        padding: 2px;
+        position: absolute;
+        border-radius: 100%;
+        text-align: center;
+        font-size: 10px;
     }
 </style>

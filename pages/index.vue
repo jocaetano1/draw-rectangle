@@ -1,9 +1,9 @@
 <script setup>
-    const url = "https://enotas.com.br/blog/wp-content/uploads/2020/04/modelo-invoice.png"
+    const imagem = "https://images-ext-2.discordapp.net/external/unAGyjGgYc-UePzA8FPIBcb1kbpdwgLl11pQVGrBPvg/https/i.ibb.co/dp73CVj/FT-01-P2023-265-page-0001.jpg"
 </script>
 
 <template>
-    <Container :image-url="url"/>
+    <Container :image-url="imagem"/>
 </template>
 
 <style scoped>
